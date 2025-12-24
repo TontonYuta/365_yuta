@@ -8,13 +8,17 @@ export const useLearningData = () => {
   const [loading, setLoading] = useState(true);
 
   // Load initial data
-  useEffect(() => {
+  const refreshData = useCallback(() => {
     const loadedSessions = StorageService.loadSessions();
     const loadedSubjects = StorageService.loadSubjects();
     setSessions(loadedSessions);
     setSubjects(loadedSubjects);
-    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    refreshData();
+    setLoading(false);
+  }, [refreshData]);
 
   // Persist data on change
   useEffect(() => {
@@ -58,6 +62,15 @@ export const useLearningData = () => {
     };
     setSubjects(prev => [...prev, newSubject]);
   }, []);
+
+  const importData = useCallback((jsonData: any) => {
+    const success = StorageService.importData(jsonData);
+    if (success) {
+      refreshData();
+      return true;
+    }
+    return false;
+  }, [refreshData]);
 
   // --- Statistics Logic ---
 
@@ -215,6 +228,7 @@ export const useLearningData = () => {
     deleteSession,
     updateSubjectConfig,
     addSubject,
+    importData,
     subjectStats: stats.subjectStats,
     globalStats,
     loading

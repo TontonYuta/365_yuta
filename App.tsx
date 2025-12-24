@@ -15,6 +15,7 @@ const App: React.FC = () => {
     deleteSession, 
     updateSubjectConfig,
     addSubject,
+    importData,
     subjectStats, 
     globalStats 
   } = useLearningData();
@@ -148,7 +149,12 @@ const App: React.FC = () => {
 
           {activeTab === 'settings' && (
             <div className="animate-fade-in">
-                <SettingsView subjects={subjects} onUpdateSubject={updateSubjectConfig} onAddSubject={addSubject} />
+                <SettingsView 
+                    subjects={subjects} 
+                    onUpdateSubject={updateSubjectConfig} 
+                    onAddSubject={addSubject}
+                    onImportData={importData}
+                />
             </div>
           )}
 

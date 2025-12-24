@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Calendar, Clock, Tag, Search, Filter, X } from 'lucide-react';
+import { Trash2, Calendar, Clock, Tag, Search, Filter, X, ExternalLink } from 'lucide-react';
 import { LearningSession, SubjectConfig } from '../types';
 
 interface HistoryListProps {
@@ -182,12 +182,23 @@ const HistoryList: React.FC<HistoryListProps> = ({ sessions, subjects, onDelete 
                     <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={session.content}>
                         <div className="flex flex-col">
                             <span>{session.content}</span>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
                                 <span className="text-xs text-slate-400 flex items-center gap-1">
                                     <Tag className="w-3 h-3" /> {session.type}
                                 </span>
                                 {session.status === 'Chưa xong' && (
                                     <span className="text-xs text-amber-600 bg-amber-50 px-1.5 rounded">Chưa xong</span>
+                                )}
+                                {session.link && (
+                                    <a 
+                                        href={session.link} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors"
+                                    >
+                                        <ExternalLink className="w-3 h-3" />
+                                        Link
+                                    </a>
                                 )}
                             </div>
                         </div>

@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { SubjectConfig } from '../types';
-import { Eye, EyeOff, Target, Plus, Save } from 'lucide-react';
+import { StorageService } from '../services/storage';
+import { Eye, EyeOff, Target, Plus, Save, Download, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface SettingsViewProps {
   subjects: SubjectConfig[];
   onUpdateSubject: (subject: SubjectConfig) => void;
   onAddSubject: (subject: Pick<SubjectConfig, 'name' | 'color' | 'targetSessions'>) => void;
+  onImportData?: (data: any) => boolean; // Optional prop for importing
 }
 
 const PRESET_COLORS = [
     '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'
 ];
 
-const SettingsView: React.FC<SettingsViewProps> = ({ subjects, onUpdateSubject, onAddSubject }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ subjects, onUpdateSubject, onAddSubject, onImportData }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
   const [newTarget, setNewTarget] = useState(365);
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = (e: React.FormEvent) => {
       e.preventDefault();
@@ -31,9 +36,99 @@ const SettingsView: React.FC<SettingsViewProps> = ({ subjects, onUpdateSubject, 
       }
   };
 
+  const handleExport = () => {
+    const data = StorageService.exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `365tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (onImportData && onImportData(json)) {
+            setImportStatus('success');
+            setTimeout(() => setImportStatus('idle'), 3000);
+        } else {
+             // Fallback if prop not provided or failed inside hook, try direct service (though hook is preferred for state update)
+             if (!onImportData && StorageService.importData(json)) {
+                 setImportStatus('success');
+                 window.location.reload(); // Force reload if not using hook
+             } else {
+                 setImportStatus('error');
+             }
+        }
+      } catch (err) {
+        console.error(err);
+        setImportStatus('error');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="space-y-6">
       
+      {/* Data Management Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <Save className="w-5 h-5 text-indigo-600" />
+            Sao lưu dữ liệu
+          </h2>
+          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-4 text-sm text-indigo-800">
+            Dữ liệu được lưu trên trình duyệt này. Hãy xuất file sao lưu thường xuyên để tránh mất dữ liệu khi xóa lịch sử web hoặc đổi thiết bị.
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+                onClick={handleExport}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            >
+                <Download className="w-4 h-4" /> Xuất dữ liệu (.json)
+            </button>
+            
+            <div className="relative">
+                <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".json"
+                    className="hidden"
+                />
+                <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                    <Upload className="w-4 h-4" /> Khôi phục dữ liệu
+                </button>
+            </div>
+          </div>
+
+          {importStatus === 'success' && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-green-600 font-medium animate-fade-in">
+                  <CheckCircle className="w-4 h-4" /> Khôi phục thành công!
+              </div>
+          )}
+          {importStatus === 'error' && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-red-600 font-medium animate-fade-in">
+                  <AlertCircle className="w-4 h-4" /> File không hợp lệ. Vui lòng kiểm tra lại.
+              </div>
+          )}
+      </div>
+
       {/* Subject Management Card */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
         <div className="flex justify-between items-center mb-6">

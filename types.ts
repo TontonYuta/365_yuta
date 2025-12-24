@@ -16,6 +16,7 @@ export interface LearningSession {
   date: string; // ISO YYYY-MM-DD
   subjectId: string; // References SubjectConfig.id
   content: string;
+  link?: string; // Optional URL link (Drive, Docs, etc.)
   count: number; // Default 1
   durationMinutes: number;
   type: SessionType;

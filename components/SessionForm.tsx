@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle, Clock, BookOpen, Tag, Calendar, Zap } from 'lucide-react';
+import { Plus, CheckCircle, Clock, BookOpen, Tag, Calendar, Zap, Link as LinkIcon } from 'lucide-react';
 import { SessionType, SessionStatus, LearningSession, SubjectConfig } from '../types';
 import { SESSION_TYPES, SESSION_STATUSES } from '../constants';
 
@@ -25,6 +25,7 @@ const SessionForm: React.FC<SessionFormProps> = ({ subjects, onAdd }) => {
   const [date, setDate] = useState(getLocalDateString());
   const [subjectId, setSubjectId] = useState<string>('');
   const [content, setContent] = useState('');
+  const [link, setLink] = useState('');
   const [duration, setDuration] = useState<number>(60);
   const [type, setType] = useState<SessionType>('Lý thuyết');
   const [status, setStatus] = useState<SessionStatus>('Hoàn thành');
@@ -70,6 +71,7 @@ const SessionForm: React.FC<SessionFormProps> = ({ subjects, onAdd }) => {
       date,
       subjectId,
       content: content || "Tự học", // Default content if empty
+      link: link.trim(),
       durationMinutes: duration,
       type,
       status,
@@ -82,6 +84,7 @@ const SessionForm: React.FC<SessionFormProps> = ({ subjects, onAdd }) => {
 
     // Reset fields but keep Date (user might log multiple for same day) and Subject (sticky)
     setContent('');
+    setLink('');
     setStatus('Hoàn thành');
   };
 
@@ -187,6 +190,21 @@ const SessionForm: React.FC<SessionFormProps> = ({ subjects, onAdd }) => {
                   </button>
               ))}
           </div>
+        </div>
+
+        {/* Link Input */}
+        <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1">Link đính kèm (Tùy chọn)</label>
+            <div className="relative">
+                <input 
+                    type="url" 
+                    placeholder="https://drive.google.com/..."
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none pl-9"
+                />
+                <LinkIcon className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            </div>
         </div>
 
         {/* Duration with Chips */}

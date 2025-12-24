@@ -44,5 +44,32 @@ export const StorageService = {
   clearData: (): void => {
     localStorage.removeItem(DATA_KEY);
     localStorage.removeItem(CONFIG_KEY);
+  },
+
+  // Export data to a JSON object
+  exportData: () => {
+    const sessions = localStorage.getItem(DATA_KEY);
+    const subjects = localStorage.getItem(CONFIG_KEY);
+    return {
+      sessions: sessions ? JSON.parse(sessions) : [],
+      subjects: subjects ? JSON.parse(subjects) : DEFAULT_SUBJECTS,
+      exportDate: new Date().toISOString(),
+      version: 1
+    };
+  },
+
+  // Import and validate data
+  importData: (jsonData: any): boolean => {
+    try {
+      if (!jsonData.sessions || !Array.isArray(jsonData.sessions)) throw new Error("Invalid sessions data");
+      if (!jsonData.subjects || !Array.isArray(jsonData.subjects)) throw new Error("Invalid subjects data");
+      
+      localStorage.setItem(DATA_KEY, JSON.stringify(jsonData.sessions));
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(jsonData.subjects));
+      return true;
+    } catch (error) {
+      console.error("Import failed:", error);
+      return false;
+    }
   }
 };
